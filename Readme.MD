@@ -9,13 +9,13 @@
 Clone the project
 
 ```bash
-  git clone https://github.com/yudhaananda/Golang-Code-Generator.git
+  git clone https://github.com/yudhaananda/go-code-generator.git
 ```
 
 Go to the project directory
 
 ```bash
-  cd golang-code-generator
+  cd go-code-generator
 ```
 
 Build Docker App
@@ -29,10 +29,6 @@ Run Docker App
 ```bash
   make docker-run
 ```
-
-## JSON Rule
-
-If you want to add new entity in json you must included the Flag to DeletedDate row
 
 
 ## Screenshots
