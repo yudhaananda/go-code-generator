@@ -1,0 +1,114 @@
+package base
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"reflect"
+	"{{ .ProjectName }}/src/filter"
+	"{{ .ProjectName }}/src/models"
+)
+
+type BaseInterface[T, M, F comparable] interface {
+	Get(ctx context.Context, paging filter.Paging[F]) ([]M, int, error)
+	Create(ctx context.Context, input models.Query[T]) error
+	Update(ctx context.Context, input models.Query[T], id int) error
+}
+
+type BaseRepository[T, M, F comparable] struct {
+	Db        *sql.DB
+	TableName string
+}
+
+func (r *BaseRepository[T, M, F]) Update(ctx context.Context, input models.Query[T], id int) error {
+	tx, err := r.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	updateQuery := input.BuildUpdateQuery(id)
+
+	if _, err = tx.ExecContext(ctx, Update+r.TableName+updateQuery); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *BaseRepository[T, M, F]) Create(ctx context.Context, input models.Query[T]) error {
+	tx, err := r.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	createQuery := input.BuildCreateQuery()
+
+	if _, err = tx.ExecContext(ctx, Create+r.TableName+createQuery); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *BaseRepository[T, M, F]) Get(ctx context.Context, paging filter.Paging[F]) ([]M, int, error) {
+
+	var (
+		where      = paging.QueryBuilder()
+		pagination = paging.PaginationQuery()
+		tempModels = models.Query[M]{}
+		member     = tempModels.BuildTableMember()
+		query      = fmt.Sprintf(Select, member)
+		models     = []M{}
+		count      int
+	)
+
+	rowCount, err := r.Db.QueryContext(ctx, Count+r.TableName+where)
+	if err != nil {
+		return models, 0, err
+	}
+
+	defer rowCount.Close()
+	for rowCount.Next() {
+		err = rowCount.Scan(&count)
+		if err != nil {
+			return models, count, err
+		}
+	}
+	row, err := r.Db.QueryContext(ctx, query+r.TableName+where+pagination)
+	if err != nil {
+		return models, count, err
+	}
+
+	defer row.Close()
+	for row.Next() {
+		var model M
+
+		s := reflect.ValueOf(&model).Elem()
+		numCols := s.NumField()
+		columns := make([]interface{}, numCols)
+		for i := 0; i < numCols; i++ {
+			field := s.Field(i)
+			columns[i] = field.Addr().Interface()
+		}
+
+		err := row.Scan(columns...)
+		if err != nil {
+			return models, count, err
+		}
+		models = append(models, model)
+	}
+
+	return models, count, nil
+}

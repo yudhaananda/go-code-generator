@@ -1,0 +1,13 @@
+{{range .Entity}}CREATE TABLE IF NOT EXISTS `{{ .TableName }}` (
+    `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    {{ range .TableItems}}{{ .Item }}
+    {{ end }}
+    `status` INT NOT NULL DEFAULT '1',
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `created_by` INT,
+    `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `updated_by` INT,
+    `deleted_at`TIMESTAMP,
+    `deleted_by` INT
+) ENGINE = INNODB;
+{{ end }}

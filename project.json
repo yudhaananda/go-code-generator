@@ -1,44 +1,33 @@
 {
     "projectName": "testApp",
     "entity": {
-        "user": ["Id int",
-            "UserName string",
-            "Password string",
-            "Email string",
-            "FullName string",
-            "Photo string",
-            "Telephone string",
-            "Flag int",
-            "CreatedBy string",
-            "CreatedDate time.Time",
-            "UpdatedBy string",
-            "UpdatedDate time.Time",
-            "DeletedBy string",
-            "DeletedDate time.Time"
+        "User":[
+            {
+                "name":"UserName",
+                "dataType":"string",
+                "isNullable":false
+            },
+            {
+                "name":"Password",
+                "dataType":"string",
+                "isNullable":false
+            }
         ],
-        "userRole": ["Id int",
-            "RoleName string",
-            "Flag int",
-            "CreatedBy string",
-            "CreatedDate time.Time",
-            "UpdatedBy string",
-            "UpdatedDate time.Time",
-            "DeletedBy string",
-            "DeletedDate time.Time"
+        "UserRole": [
+            {
+                "name":"RoleName",
+                "dataType":"string",
+                "isNullable":false
+            }
         ]
     },
-    "relation": [{
-        "table1": "userRole",
-        "table2": "user",
-        "relationName": "1M"
-    }],
     "database": {
         "type": "mysql",
+        "name": "test",
         "user": "root",
         "pass": "",
         "host": "127.0.0.1",
         "port": "3306",
-        "jwttoken": "token"
-    },
-    "isUsingWebsocket": false
+        "jwtToken": "token"
+    }
 }

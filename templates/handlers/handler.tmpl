@@ -1,0 +1,147 @@
+package handler
+
+import (
+	"net/http"
+	"strconv"
+	"{{ .ProjectName }}/src/filter"
+	"{{ .ProjectName }}/src/formatter"
+	"{{ .ProjectName }}/src/models"
+
+	"github.com/gin-gonic/gin"
+)
+
+// @BasePath /api/v1
+// PingExample godoc
+// @Summary
+// @Schemes
+// @Description
+// @Tags {{ .EntityName }}
+// @Security ApiKeyAuth
+// @Param paging query filter.Paging[filter.{{ .EntityName }}Filter] false "paging"
+// @Param filter query filter.{{ .EntityName }}Filter false "filter"
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Router /{{ .EntityNameDash }}/ [GET]
+func (h *handler) Get{{ .EntityName }}(ctx *gin.Context) {
+	var filter filter.Paging[filter.{{ .EntityName }}Filter]
+	filter.SetDefault()
+
+	if err := h.BindParams(ctx, &filter); err != nil {
+		response := models.APIResponse("Get {{ .EntityName }} Failed", http.StatusUnprocessableEntity, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	{{ .EntityNameLowerCase }}s, count, err := h.service.{{ .EntityName }}.Get(ctx, filter)
+	if err != nil {
+		response := models.APIResponse("Get {{ .EntityName }} Failed", http.StatusInternalServerError, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	paginatedItems := formatter.PaginatedItems{}
+	paginatedItems.Format(filter.Page, float64(len({{ .EntityNameLowerCase }}s)), float64(count), float64(filter.Take), {{ .EntityNameLowerCase }}s)
+
+	response := models.APIResponse("Get {{ .EntityName }} Success", http.StatusOK, "Success", paginatedItems, nil)
+	ctx.JSON(http.StatusOK, response)
+}
+
+// @BasePath /api/v1
+// PingExample godoc
+// @Summary
+// @Schemes
+// @Description
+// @Tags {{ .EntityName }}
+// @Security ApiKeyAuth
+// @Param models body models.{{ .EntityName }}Input true "models"
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Router /{{ .EntityNameDash }}/ [POST]
+func (h *handler) Create{{ .EntityName }}(ctx *gin.Context) {
+	var input models.Query[models.{{ .EntityName }}Input]
+
+	if err := ctx.ShouldBindJSON(&input.Model); err != nil {
+		response := models.APIResponse("Create {{ .EntityName }} Failed", http.StatusUnprocessableEntity, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	if err := h.service.{{ .EntityName }}.Create(ctx, input); err != nil {
+		response := models.APIResponse("Create {{ .EntityName }} Failed", http.StatusInternalServerError, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := models.APIResponse("Create {{ .EntityName }} Success", http.StatusOK, "Success", nil, nil)
+	ctx.JSON(http.StatusOK, response)
+}
+
+// @BasePath /api/v1
+// PingExample godoc
+// @Summary
+// @Schemes
+// @Description
+// @Tags {{ .EntityName }}
+// @Security ApiKeyAuth
+// @Param id path integer true "id"
+// @Param models body models.{{ .EntityName }}Input true "models"
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Router /{{ .EntityNameDash }}/{id} [PUT]
+func (h *handler) Update{{ .EntityName }}(ctx *gin.Context) {
+	var input models.Query[models.{{ .EntityName }}Input]
+
+	if err := ctx.ShouldBindJSON(&input.Model); err != nil {
+		response := models.APIResponse("Update {{ .EntityName }} Failed", http.StatusUnprocessableEntity, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		response := models.APIResponse("Update {{ .EntityName }} Failed", http.StatusUnprocessableEntity, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	if err := h.service.{{ .EntityName }}.Update(ctx, input, id); err != nil {
+		response := models.APIResponse("Update {{ .EntityName }} Failed", http.StatusInternalServerError, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := models.APIResponse("Update {{ .EntityName }} Success", http.StatusOK, "Success", nil, nil)
+	ctx.JSON(http.StatusOK, response)
+}
+
+// @BasePath /api/v1
+// PingExample godoc
+// @Summary
+// @Schemes
+// @Description
+// @Tags {{ .EntityName }}
+// @Security ApiKeyAuth
+// @Param id path integer true "id"
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Router /{{ .EntityNameDash }}/{id} [DELETE]
+func (h *handler) Delete{{ .EntityName }}(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		response := models.APIResponse("Delete {{ .EntityName }} Failed", http.StatusUnprocessableEntity, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	if err := h.service.{{ .EntityName }}.Delete(ctx, id); err != nil {
+		response := models.APIResponse("Delete {{ .EntityName }} Failed", http.StatusInternalServerError, "Failed", nil, err.Error())
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+
+	response := models.APIResponse("Delete {{ .EntityName }} Success", http.StatusOK, "Success", nil, nil)
+	ctx.JSON(http.StatusOK, response)
+}

@@ -1,0 +1,63 @@
+package {{ .EntityNameLowerCase }}
+
+import (
+	"context"
+	"{{ .ProjectName }}/src/filter"
+	"{{ .ProjectName }}/src/models"
+	{{ .EntityNameLowerCase }} "{{ .ProjectName }}/src/repositories/{{ .EntityNameSnakeCase }}"
+	"time"
+)
+
+type Interface interface {
+	Delete(ctx context.Context, id int) error
+	Update(ctx context.Context, input models.Query[models.{{ .EntityName }}Input], id int) error
+	Create(ctx context.Context, input models.Query[models.{{ .EntityName }}Input]) error
+	Get(ctx context.Context, paging filter.Paging[filter.{{ .EntityName }}Filter]) ([]models.{{ .EntityName }}, int, error)
+}
+
+type {{ .EntityNameCamelCase }}Service struct {
+	{{ .EntityNameCamelCase }}Repository {{ .EntityNameLowerCase }}.Interface
+}
+
+type Param struct {
+	{{ .EntityName }}Repository {{ .EntityNameLowerCase }}.Interface
+}
+
+func Init(param Param) Interface {
+	return &{{ .EntityNameCamelCase }}Service{
+		{{ .EntityNameCamelCase }}Repository: param.{{ .EntityName }}Repository,
+	}
+}
+
+var Now = time.Now
+
+func (s *{{ .EntityNameCamelCase }}Service) Delete(ctx context.Context, id int) error {
+	input := models.Query[models.{{ .EntityName }}Input]{
+		Model: models.{{ .EntityName }}Input{
+			Status:    -1,
+			DeletedAt: Now(),
+			DeletedBy: ctx.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+		},
+	}
+
+	return s.{{ .EntityNameCamelCase }}Repository.Update(ctx, input, id)
+}
+
+func (s *{{ .EntityNameCamelCase }}Service) Update(ctx context.Context, input models.Query[models.{{ .EntityName }}Input], id int) error {
+	input.Model.UpdatedAt = Now()
+	input.Model.UpdatedBy = ctx.Value(string(models.UserKey)).(models.{{ .EntityName }}).Id
+
+	return s.{{ .EntityNameCamelCase }}Repository.Update(ctx, input, id)
+}
+
+func (s *{{ .EntityNameCamelCase }}Service) Create(ctx context.Context, input models.Query[models.{{ .EntityName }}Input]) error {
+	input.Model.CreatedAt = Now()
+	input.Model.CreatedBy = ctx.Value(models.UserKey).(models.{{ .EntityName }}).Id
+
+	return s.{{ .EntityNameCamelCase }}Repository.Create(ctx, input)
+}
+
+func (s *{{ .EntityNameCamelCase }}Service) Get(ctx context.Context, paging filter.Paging[filter.{{ .EntityName }}Filter]) ([]models.{{ .EntityName }}, int, error) {
+	paging.IsActive = true
+	return s.{{ .EntityNameCamelCase }}Repository.Get(ctx, paging)
+}

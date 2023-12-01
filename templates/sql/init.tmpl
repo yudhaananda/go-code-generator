@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -euxo pipefail
+
+HOST="${MYSQL_HOST:-{{ .DBHost }}}"
+PORT="${MYSQL_PORT:-{{ .DBPort }}}"
+DB_NAME="${MYSQL_DB:-{{ .DBName }}}"
+USERNAME="${MYSQL_USER:-{{ .DBUser }}}"
+PASSWORD="${MYSQL_PASSWORD:-{{ .DBPassword }}}"
+PROTOCOL="${MYSQL_PROTOCOL:-tcp}"
+
+rm temp.sql || true
+echo "DROP DATABASE IF EXISTS ${DB_NAME};\n" >> temp.sql
+echo "CREATE DATABASE IF NOT EXISTS ${DB_NAME};\n" >> temp.sql
+echo "USE ${DB_NAME};\n" >> temp.sql
+echo "SET foreign_key_checks = 0;\n" >> temp.sql
+cat ./[!temp]*.sql >> temp.sql
+echo "SET foreign_key_checks = 1;\n"
+
+mysql -h ${HOST} -P ${PORT} -u ${USERNAME} --password=${PASSWORD} --protocol=${PROTOCOL} < temp.sql
+rm temp.sql

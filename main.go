@@ -1,21 +1,15 @@
 package main
 
 import (
-	"github.com/yudhaananda/go-code-generator/models"
+	"github.com/yudhaananda/go-code-generator/handlers"
 	"github.com/yudhaananda/go-code-generator/repositories"
+	"github.com/yudhaananda/go-code-generator/services"
 )
 
 func main() {
 	repo := repositories.Init(repositories.Param{})
-	repo.GenerateModels.CreateModels("test", "test", "test.go", models.CreateModelsInput{
-		EntityName: "test",
-		EntityValue: []models.EntityValue{
-			{
-				EntityValueName:          "test",
-				EntityDataType:           "test",
-				EntityValueNameSnakeCase: "test",
-				EntityValueNameCamelCase: "test",
-			},
-		},
-	})
+	service := services.Init(services.Param{Repositories: repo})
+	handler := handlers.Init(service)
+
+	handler.Run()
 }

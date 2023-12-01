@@ -1,10 +1,133 @@
 package models
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/yudhaananda/go-code-generator/helper"
+)
+
+const (
+	floatDataType  = "float"
+	intDataType    = "int"
+	stringDataType = "string"
+	timeDataType   = "time.Time"
+)
+
 type Model struct {
-	ProjectName string              `json:"projectName"`
-	Entity      map[string][]string `json:"entity"`
-	Relation    []map[string]string `json:"relation"`
-	Database    map[string]string   `json:"database"`
+	ProjectName string                        `json:"projectName"`
+	Entity      map[string][]EntityValueInput `json:"entity"`
+	Database    Database                      `json:"database"`
+}
+
+type Database struct {
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	User     string `json:"user"`
+	Pass     string `json:"pass"`
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	JwtToken string `json:"jwtToken"`
+}
+
+type EntityValueInput struct {
+	EntityName     string `json:"name"`
+	EntityDataType string `json:"dataType"`
+	IsNullable     bool   `json:"isNullable"`
+}
+
+func (e *EntityValueInput) GetTableValue() (result string) {
+	if strings.Contains(e.EntityDataType, intDataType) {
+		result = fmt.Sprintf("`%s` INT", helper.ConvertToSnakeCase(e.EntityName))
+		if !e.IsNullable {
+			result += " NOT NULL"
+		}
+		result += ","
+		return
+	} else if strings.Contains(e.EntityDataType, floatDataType) {
+		result = fmt.Sprintf("`%s` DECIMAL", helper.ConvertToSnakeCase(e.EntityName))
+		if !e.IsNullable {
+			result += " NOT NULL"
+		}
+		result += ","
+		return
+	} else if strings.Contains(e.EntityDataType, stringDataType) {
+		result = fmt.Sprintf("`%s` VARCHAR", helper.ConvertToSnakeCase(e.EntityName))
+		if !e.IsNullable {
+			result += " NOT NULL"
+		}
+		result += ","
+		return
+	} else if strings.Contains(e.EntityDataType, timeDataType) {
+		result = fmt.Sprintf("`%s` TIMESTAMP", helper.ConvertToSnakeCase(e.EntityName))
+		if !e.IsNullable {
+			result += " NOT NULL"
+		}
+		result += ","
+		return
+	}
+	return
+}
+
+func (e *EntityValueInput) GetEntityValue() EntityValue {
+	dataType := e.EntityDataType
+	if e.IsNullable {
+		dataType = fmt.Sprintf("formatter.NullableDataType[%s]", e.EntityDataType)
+	}
+	return EntityValue{
+		EntityValueName:          e.EntityName,
+		EntityDataType:           dataType,
+		EntityValueNameSnakeCase: helper.ConvertToSnakeCase(e.EntityName),
+		EntityValueNameCamelCase: helper.ConvertToCamelCase(e.EntityName),
+	}
+}
+
+func (e *EntityValueInput) GetMockTableMember() (result string) {
+	return fmt.Sprintf("\"%s\", ", helper.ConvertToCamelCase(e.EntityName))
+}
+
+func (e *EntityValueInput) GetMockRow() (result string) {
+	if strings.Contains(e.EntityDataType, intDataType) || strings.Contains(e.EntityDataType, floatDataType) {
+		result = "1, "
+		if e.IsNullable {
+			result = fmt.Sprintf("formatter.NullableDataType[%s]{Valid: true, Data: 1}, ", e.EntityDataType)
+		}
+		return
+	} else if strings.Contains(e.EntityDataType, timeDataType) {
+		result = "mockTime, "
+		if e.IsNullable {
+			result = fmt.Sprintf("formatter.NullableDataType[%s]{Valid: true, Data: mocktime}, ", e.EntityDataType)
+		}
+		return
+	} else {
+		result = "\"test\", "
+		if e.IsNullable {
+			result = fmt.Sprintf("formatter.NullableDataType[%s]{Valid: true, Data: \"test\"}, ", e.EntityDataType)
+		}
+		return
+	}
+}
+
+func (e *EntityValueInput) GetWantMock() (result string) {
+	if strings.Contains(e.EntityDataType, intDataType) || strings.Contains(e.EntityDataType, floatDataType) {
+		result = fmt.Sprintf("%s: 1, \n", e.EntityName)
+		if e.IsNullable {
+			result = fmt.Sprintf("%s: formatter.NullableDataType[%s]{Valid: true, Data: 1}, \n", e.EntityName, e.EntityDataType)
+		}
+		return
+	} else if strings.Contains(e.EntityDataType, timeDataType) {
+		result = fmt.Sprintf("%s: mockTime, \n", e.EntityName)
+		if e.IsNullable {
+			result = fmt.Sprintf("%s: formatter.NullableDataType[%s]{Valid: true, Data: mocktime}, \n", e.EntityName, e.EntityDataType)
+		}
+		return
+	} else {
+		result = fmt.Sprintf("%s: \"test\", \n", e.EntityName)
+		if e.IsNullable {
+			result = fmt.Sprintf("%s: formatter.NullableDataType[%s]{Valid: true, Data: \"test\"}, \n", e.EntityName, e.EntityDataType)
+		}
+		return
+	}
 }
 
 type EntityValue struct {
@@ -15,6 +138,121 @@ type EntityValue struct {
 }
 
 type CreateModelsInput struct {
+	ProjectName string
 	EntityName  string
 	EntityValue []EntityValue
+}
+
+type GeneralTemplateInput struct {
+	ProjectName string
+}
+
+type FilterInput struct {
+	EntityName  string
+	EntityValue []EntityValue
+}
+
+type RepositoriesInput struct {
+	ProjectName         string
+	EntityName          string
+	EntityNameCamelCase string
+	EntityNameLowerCase string
+}
+
+type RepositoriesTestInput struct {
+	ProjectName         string
+	EntityName          string
+	EntityNameCamelCase string
+	EntityNameSnakeCase string
+	MockTableMember     string
+	MockRow             string
+	WantMock            string
+	EntityNameLowerCase string
+}
+
+type RepositoriesInitInput struct {
+	ProjectName string
+	Entity      []RepositoriesInitEntity
+}
+
+type RepositoriesInitEntity struct {
+	EntityNameLowerCase string
+	EntityName          string
+	EntityNameSnakeCase string
+	ProjectName         string
+}
+
+type ServicesInput struct {
+	ProjectName         string
+	EntityNameLowerCase string
+	EntityName          string
+	EntityNameCamelCase string
+	EntityNameSnakeCase string
+}
+
+type ServicesTestInput struct {
+	ProjectName         string
+	EntityNameLowerCase string
+	EntityName          string
+	EntityNameCamelCase string
+	EntityNameSnakeCase string
+}
+
+type ServicesInitInput struct {
+	ProjectName string
+	Entity      []ServicesInitEntity
+}
+
+type ServicesInitEntity struct {
+	EntityNameLowerCase string
+	EntityName          string
+	EntityNameSnakeCase string
+	ProjectName         string
+}
+
+type HandlerInput struct {
+	ProjectName         string
+	EntityName          string
+	EntityNameLowerCase string
+	EntityNameDash      string
+}
+
+type HandlerInitInput struct {
+	ProjectName string
+	Entity      []HanlderInitEntity
+}
+
+type HanlderInitEntity struct {
+	EntityNameLowerCase string
+	EntityName          string
+	EntityNameDash      string
+}
+
+type MockInput struct {
+	ProjectName         string
+	EntityNameSnakeCase string
+	EntityName          string
+}
+
+type Table struct {
+	Entity []TableMember
+}
+
+type TableMember struct {
+	TableName  string
+	TableItems []TableItem
+}
+
+type TableItem struct {
+	Item string
+}
+
+type Env struct {
+	DBUser     string
+	DBPassword string
+	DBPort     string
+	DBHost     string
+	DBName     string
+	JwtToken   string
+	DBType     string
 }

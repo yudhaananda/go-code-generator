@@ -1,0 +1,29 @@
+package services
+
+import (
+	"{{ .ProjectName }}/src/repositories"
+	"{{ .ProjectName }}/src/services/auth"
+	{{ range .Entity }}{{ .EntityNameLowerCase }} "{{ .ProjectName }}/src/services/{{ .EntityNameSnakeCase }}"
+    {{ end }}
+)
+
+type Services struct {
+	Auth auth.Interface
+	{{ range .Entity }}{{ .EntityName }} {{ .EntityNameLowerCase }}.Interface
+    {{ end }}
+}
+
+type Param struct {
+	Repositories *repositories.Repositories
+}
+
+func Init(param Param) *Services {
+	return &Services{
+		Auth: auth.Init(auth.Param{UserRepository: param.Repositories.User, AuthRepository: param.Repositories.Auth}),
+		{{ range .Entity }}{{ .EntityName }}: {{ .EntityNameLowerCase }}.Init({{ .EntityNameLowerCase }}.Param{
+			{{ .EntityName }}Repository: param.Repositories.{{ .EntityName }},
+		},
+		),
+        {{ end }}
+	}
+}

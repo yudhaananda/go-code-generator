@@ -1,0 +1,7 @@
+package filter
+
+type {{ .EntityName }}Filter struct {
+	Id        int       `db:"id" json:"id" form:"id"`
+    {{ range .EntityValue }}{{ .EntityValueName }} {{ .EntityDataType }} `db:"{{ .EntityValueNameSnakeCase }}" json:"{{ .EntityValueNameCamelCase }}" form:"{{ .EntityValueNameCamelCase }}"`
+    {{ end }}
+}

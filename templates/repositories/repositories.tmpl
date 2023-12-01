@@ -1,0 +1,29 @@
+package {{ .EntityNameLowerCase }}
+
+import (
+	"database/sql"
+	"{{ .ProjectName }}/src/filter"
+	"{{ .ProjectName }}/src/models"
+	"{{ .ProjectName }}/src/repositories/base"
+)
+
+type Interface interface {
+	base.BaseInterface[models.{{ .EntityName }}Input, models.{{ .EntityName }}, filter.{{ .EntityName }}Filter]
+}
+
+type {{ .EntityNameCamelCase }}Repository struct {
+	base.BaseRepository[models.{{ .EntityName }}Input, models.{{ .EntityName }}, filter.{{ .EntityName }}Filter]
+}
+type Param struct {
+	Db        *sql.DB
+	TableName string
+}
+
+func Init(param Param) Interface {
+	return &{{ .EntityNameCamelCase }}Repository{
+		BaseRepository: base.BaseRepository[models.{{ .EntityName }}Input, models.{{ .EntityName }}, filter.{{ .EntityName }}Filter]{
+			Db:        param.Db,
+			TableName: param.TableName,
+		},
+	}
+}
