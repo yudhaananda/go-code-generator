@@ -52,7 +52,7 @@ func (e *EntityValueInput) GetTableValue() (result string) {
 		result += ","
 		return
 	} else if strings.Contains(e.EntityDataType, stringDataType) {
-		result = fmt.Sprintf("`%s` VARCHAR", helper.ConvertToSnakeCase(e.EntityName))
+		result = fmt.Sprintf("`%s` VARCHAR(255)", helper.ConvertToSnakeCase(e.EntityName))
 		if !e.IsNullable {
 			result += " NOT NULL"
 		}
@@ -176,10 +176,11 @@ type RepositoriesInitInput struct {
 }
 
 type RepositoriesInitEntity struct {
-	EntityNameLowerCase string
-	EntityName          string
-	EntityNameSnakeCase string
-	ProjectName         string
+	EntityNameLowerCase       string
+	EntityName                string
+	EntityNameSnakeCasePlural string
+	EntityNameSnakeCase       string
+	ProjectName               string
 }
 
 type ServicesInput struct {

@@ -4,6 +4,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/gertd/go-pluralize"
 )
 
 func CreateFile(project, folderName, fileName string) (*os.File, error) {
@@ -52,4 +54,9 @@ func ConvertToDash(input string) string {
 
 func ConvertToLowerCase(input string) string {
 	return strings.ToLower(input)
+}
+
+func ConvertToPlural(input string) string {
+	plural := pluralize.NewClient()
+	return plural.Plural(input)
 }

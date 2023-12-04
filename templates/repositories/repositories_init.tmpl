@@ -20,7 +20,7 @@ type Param struct {
 func Init(param Param) *Repositories {
 	return &Repositories{
 		Auth: auth.Init(),
-		{{ range .Entity }}{{ .EntityName }}: {{ .EntityNameLowerCase }}.Init({{ .EntityNameLowerCase }}.Param{Db: param.Db, TableName: "{{ .EntityNameSnakeCase }}"}),
+		{{ range .Entity }}{{ .EntityName }}: {{ .EntityNameLowerCase }}.Init({{ .EntityNameLowerCase }}.Param{Db: param.Db, TableName: "{{ .EntityNameSnakeCasePlural }}"}),
         {{ end }}
 	}
 }
