@@ -13,9 +13,6 @@ type Interface interface {
 type generate struct {
 }
 
-type Params struct {
-}
-
 func Init() Interface {
 	return &generate{}
 }

@@ -8,8 +8,7 @@ import (
 type {{ .EntityName }} struct {
     Id        int64                                 `db:"id" json:"id"`
 	{{ range .EntityValue }}{{ .EntityValueName }} {{ .EntityDataType }} `db:"{{ .EntityValueNameSnakeCase }}" json:"{{ .EntityValueNameCamelCase }}"`
-	{{ end }}
-	Status    int64                                 `db:"status" json:"status"`
+	{{ end }}Status    int64                                 `db:"status" json:"status"`
 	CreatedAt formatter.NullableDataType[time.Time] `db:"created_at" json:"createdAt"`
 	CreatedBy formatter.NullableDataType[int64]     `db:"created_by" json:"createdBy"`
 	UpdatedAt formatter.NullableDataType[time.Time] `db:"updated_at" json:"updatedAt"`
@@ -20,8 +19,7 @@ type {{ .EntityName }} struct {
 
 type {{ .EntityName }}Input struct {
     {{ range .EntityValue }}{{ .EntityValueName }} {{ .EntityDataType }} `db:"{{ .EntityValueNameSnakeCase }}" json:"{{ .EntityValueNameCamelCase }}"`
-	{{ end }}
-	Status    int64     `db:"status" json:"-"`
+	{{ end }}Status    int64     `db:"status" json:"-"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
 	CreatedBy int64     `db:"created_by" json:"-"`
 	UpdatedAt time.Time `db:"updated_at" json:"-"`
