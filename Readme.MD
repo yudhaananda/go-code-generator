@@ -30,6 +30,12 @@ Run Docker App
   make docker-run
 ```
 
+Run App
+
+```bash
+  make run
+```
+
 
 ## Screenshots
 
