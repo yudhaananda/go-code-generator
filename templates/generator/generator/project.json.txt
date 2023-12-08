@@ -1,0 +1,17 @@
+{
+    "projectName": "example",
+    "entity": {
+        "TodoList": [
+            {
+                "name":"Todo",
+                "dataType":"string",
+                "isNullable":false
+            },
+            {
+                "name":"Deadline",
+                "dataType":"time.Time",
+                "isNullable":false
+            }
+        ]
+    }
+}

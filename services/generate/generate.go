@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"github.com/otiai10/copy"
 	"github.com/yudhaananda/go-code-generator/helper"
 	"github.com/yudhaananda/go-code-generator/models"
 	generateRepo "github.com/yudhaananda/go-code-generator/repositories/generate"
@@ -548,6 +549,10 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 			DBType:     input.Database.Type,
 		},
 	); err != nil {
+		return nil, err
+	}
+
+	if err := copy.Copy("templates/generator", input.ProjectName+"/"); err != nil {
 		return nil, err
 	}
 

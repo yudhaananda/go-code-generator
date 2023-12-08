@@ -1,0 +1,345 @@
+package generate
+
+import (
+	"fmt"
+	"generator/helper"
+	"generator/models"
+	generateRepo "generator/repositories/generate"
+	"os"
+	"time"
+)
+
+type Interface interface {
+	Generate(input models.Model) error
+}
+
+type generate struct {
+	generateRepo generateRepo.Interface
+}
+
+type Params struct {
+	GenerateRepo generateRepo.Interface
+}
+
+func Init(param Params) Interface {
+	return &generate{
+		generateRepo: param.GenerateRepo,
+	}
+}
+
+func (s *generate) Generate(input models.Model) error {
+	var (
+		initRepo = models.RepositoriesInitInput{
+			ProjectName: input.ProjectName,
+		}
+		initService = models.ServicesInitInput{
+			ProjectName: input.ProjectName,
+		}
+		initHandler = models.HandlerInitInput{
+			ProjectName: input.ProjectName,
+		}
+		sql = models.Table{}
+	)
+	for entity, members := range input.Entity {
+		where, isExists := s.isEntityExists(entity)
+		if isExists {
+			fmt.Println(entity + " " + where + " already exists")
+			continue
+		}
+
+		var (
+			entityValue     = []models.EntityValue{}
+			mockTableMember string
+			mockRow         string
+			wantMock        string
+			tableMember     = models.TableMember{
+				TableName: helper.ConvertToSnakeCase(helper.ConvertToPlural(entity)),
+			}
+		)
+
+		initRepo.Entity = append(initRepo.Entity, models.RepositoriesInitEntity{
+			EntityName:                entity,
+			EntityNameLowerCase:       helper.ConvertToLowerCase(entity),
+			EntityNameSnakeCasePlural: helper.ConvertToSnakeCase(helper.ConvertToPlural(entity)),
+			EntityNameSnakeCase:       helper.ConvertToSnakeCase(entity),
+			ProjectName:               input.ProjectName,
+		})
+
+		initService.Entity = append(initService.Entity, models.ServicesInitEntity{
+			EntityName:          entity,
+			EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+			EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+			ProjectName:         initRepo.ProjectName,
+		})
+
+		initHandler.Entity = append(initHandler.Entity, models.HanlderInitEntity{
+			EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+			EntityName:          entity,
+			EntityNameDash:      helper.ConvertToDash(entity),
+		})
+
+		for _, member := range members {
+			item := member.GetTableValue()
+			entityValue = append(entityValue, member.GetEntityValue())
+			tableMember.TableItems = append(tableMember.TableItems, models.TableItem{Item: item})
+			mockTableMember += member.GetMockTableMember()
+			mockRow += member.GetMockRow()
+			wantMock += member.GetWantMock()
+		}
+
+		sql.Entity = append(sql.Entity, tableMember)
+
+		// Generate Models
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/models",
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/models/models.tmpl",
+			"models.tmpl",
+			models.CreateModelsInput{
+				ProjectName: input.ProjectName,
+				EntityName:  entity,
+				EntityValue: entityValue,
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Filter
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/filter",
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/filter/filter.tmpl",
+			"filter.tmpl",
+			models.FilterInput{
+				EntityName:  entity,
+				EntityValue: entityValue,
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Repositories
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/repositories/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/repositories/repositories.tmpl",
+			"repositories.tmpl",
+			models.RepositoriesInput{
+				ProjectName:         input.ProjectName,
+				EntityName:          entity,
+				EntityNameCamelCase: helper.ConvertToCamelCase(entity),
+				EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Repositories Unit Test
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/repositories/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+"_test.go",
+			"templates/repositories/repositories_test.tmpl",
+			"repositories_test.tmpl",
+			models.RepositoriesTestInput{
+				ProjectName:         input.ProjectName,
+				EntityName:          entity,
+				EntityNameCamelCase: helper.ConvertToCamelCase(entity),
+				EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+				MockTableMember:     mockTableMember,
+				MockRow:             mockRow,
+				WantMock:            wantMock,
+				EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Services
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/services/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/services/services.tmpl",
+			"services.tmpl",
+			models.ServicesInput{
+				ProjectName:         input.ProjectName,
+				EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+				EntityName:          entity,
+				EntityNameCamelCase: helper.ConvertToCamelCase(entity),
+				EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Services Unit Test
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/services/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+"_test.go",
+			"templates/services/services_test.tmpl",
+			"services_test.tmpl",
+			models.ServicesTestInput{
+				ProjectName:         input.ProjectName,
+				EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+				EntityName:          entity,
+				EntityNameCamelCase: helper.ConvertToCamelCase(entity),
+				EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Handler
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/handler",
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/handlers/handler.tmpl",
+			"handler.tmpl",
+			models.HandlerInput{
+				ProjectName:         input.ProjectName,
+				EntityNameLowerCase: helper.ConvertToLowerCase(entity),
+				EntityName:          entity,
+				EntityNameDash:      helper.ConvertToDash(entity),
+			},
+		); err != nil {
+			return err
+		}
+
+		// Generate Mock
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/repositories/mock/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/mock/mock.tmpl",
+			"mock.tmpl",
+			models.MockInput{
+				ProjectName:         input.ProjectName,
+				EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+				EntityName:          entity,
+			},
+		); err != nil {
+			return err
+		}
+
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"src/repositories/mock/"+helper.ConvertToSnakeCase(entity),
+			helper.ConvertToSnakeCase(entity)+".go",
+			"templates/mock/mock.tmpl",
+			"mock.tmpl",
+			models.MockInput{
+				ProjectName:         input.ProjectName,
+				EntityNameSnakeCase: helper.ConvertToSnakeCase(entity),
+				EntityName:          entity,
+			},
+		); err != nil {
+			return err
+		}
+
+		if err := s.initializeRepo(entity, input.ProjectName); err != nil {
+			return err
+		}
+		if err := s.initializeService(entity, input.ProjectName); err != nil {
+			return err
+		}
+
+		if err := s.generateRepo.Append(
+			"src/handler/handler.go", "api.POST(\"/register\", h.Register)",
+			helper.ConvertToInitHandler(entity),
+		); err != nil {
+			return err
+		}
+	}
+
+	fileName := time.Now().Format("20060201")
+	count := 0
+	for {
+		if _, err := os.Open(helper.Path() + "docs/sql/" + fileName + fmt.Sprintf("%02d.sql", count)); err == nil {
+			count++
+		} else {
+			fileName += fmt.Sprintf("%02d.sql", count)
+			break
+		}
+	}
+	if len(sql.Entity) > 0 {
+		if err := s.generateRepo.Generate(
+			input.ProjectName,
+			"docs/sql",
+			fileName,
+			"templates/sql/sql.tmpl",
+			"sql.tmpl",
+			sql,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *generate) initializeRepo(entity, projectName string) error {
+	if err := s.generateRepo.Append(
+		"src/repositories/repository.go", "return &Repositories{",
+		helper.ConvertToRepositoriesInjection(entity),
+	); err != nil {
+		return err
+	}
+
+	if err := s.generateRepo.Append(
+		"src/repositories/repository.go", "type Repositories struct {",
+		helper.ConvertToRepositoriesInjectionStruct(entity),
+	); err != nil {
+		return err
+	}
+
+	if err := s.generateRepo.Append(
+		"src/repositories/repository.go", "import (",
+		helper.ConvertToRepositoriesInjectionImport(entity, projectName),
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *generate) initializeService(entity, projectName string) error {
+	if err := s.generateRepo.Append(
+		"src/services/service.go", "return &Services{",
+		helper.ConvertToServicesInjection(entity),
+	); err != nil {
+		return err
+	}
+
+	if err := s.generateRepo.Append(
+		"src/services/service.go", "type Services struct {",
+		helper.ConvertToServicesInjectionStruct(entity),
+	); err != nil {
+		return err
+	}
+
+	if err := s.generateRepo.Append(
+		"src/services/service.go", "import (",
+		helper.ConvertToServicesInjectionImport(entity, projectName),
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *generate) isEntityExists(entity string) (string, bool) {
+	files := []string{
+		"repositories",
+		"services",
+	}
+	for _, file := range files {
+		if _, err := os.Open(helper.Path() + "src/" + file + "/" + helper.ConvertToSnakeCase(entity) + "/" + helper.ConvertToSnakeCase(entity) + ".go"); err == nil {
+			return file, true
+		}
+	}
+	return "", false
+}

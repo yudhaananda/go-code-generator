@@ -1,0 +1,338 @@
+package {{ .EntityNameLowerCase }}_test
+
+import (
+	"context"
+	"{{ .ProjectName }}/src/filter"
+	"{{ .ProjectName }}/src/models"
+	mock_{{ .EntityNameSnakeCase }} "{{ .ProjectName }}/src/repositories/mock/{{ .EntityNameSnakeCase }}"
+	{{ .EntityNameLowerCase }} "{{ .ProjectName }}/src/services/{{ .EntityNameSnakeCase }}"
+	"testing"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+)
+
+func Test_{{ .EntityNameCamelCase }}Service_Create(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+
+	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
+	type mockfields struct {
+		{{ .EntityNameCamelCase }} *mock_{{ .EntityNameSnakeCase }}.MockInterface
+	}
+	mocks := mockfields{
+		{{ .EntityNameCamelCase }}: {{ .EntityNameCamelCase }}Repo,
+	}
+	params := {{ .EntityNameLowerCase }}.Param{
+		{{ .EntityName }}Repository: {{ .EntityNameCamelCase }}Repo,
+	}
+	service := {{ .EntityNameLowerCase }}.Init(params)
+	type args struct {
+		Input models.Query[models.{{ .EntityName }}Input]
+	}
+
+	mockTime := time.Date(2022, 5, 11, 0, 0, 0, 0, time.Local)
+	{{ .EntityNameLowerCase }}.Now = func() time.Time {
+		return mockTime
+	}
+
+	restoreAll := func() {
+		{{ .EntityNameLowerCase }}.Now = time.Now
+	}
+	defer restoreAll()
+
+	tests := []struct {
+		name     string
+		args     args
+		mockfunc func(a args, mock mockfields)
+		wantErr  bool
+	}{
+		{
+			name: "create {{ .EntityNameCamelCase }} error",
+			args: args{
+				Input: models.Query[models.{{ .EntityName }}Input]{},
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Create(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						CreatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						CreatedAt: mockTime,
+					},
+				}).Return(assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "create {{ .EntityNameCamelCase }} success",
+			args: args{
+				models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{},
+				},
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Create(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						CreatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						CreatedAt: mockTime,
+					},
+				}).Return(nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockfunc(tt.args, mocks)
+
+			err := service.Create(context, tt.args.Input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("{{ .EntityNameCamelCase }}.Create() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func Test_{{ .EntityNameCamelCase }}Service_Update(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+
+	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
+	type mockfields struct {
+		{{ .EntityNameCamelCase }} *mock_{{ .EntityNameSnakeCase }}.MockInterface
+	}
+	mocks := mockfields{
+		{{ .EntityNameCamelCase }}: {{ .EntityNameCamelCase }}Repo,
+	}
+	params := {{ .EntityNameLowerCase }}.Param{
+		{{ .EntityName }}Repository: {{ .EntityNameCamelCase }}Repo,
+	}
+	service := {{ .EntityNameLowerCase }}.Init(params)
+	type args struct {
+		Input models.Query[models.{{ .EntityName }}Input]
+		Id    int
+	}
+
+	mockTime := time.Date(2022, 5, 11, 0, 0, 0, 0, time.Local)
+	{{ .EntityNameLowerCase }}.Now = func() time.Time {
+		return mockTime
+	}
+
+	restoreAll := func() {
+		{{ .EntityNameLowerCase }}.Now = time.Now
+	}
+	defer restoreAll()
+
+	tests := []struct {
+		name     string
+		args     args
+		mockfunc func(a args, mock mockfields)
+		wantErr  bool
+	}{
+		{
+			name: "update {{ .EntityNameCamelCase }} error",
+			args: args{
+				Input: models.Query[models.{{ .EntityName }}Input]{},
+				Id:    1,
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						UpdatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						UpdatedAt: mockTime,
+					},
+				}, 1).Return(assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "update {{ .EntityNameCamelCase }} success",
+			args: args{
+				Input: models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{},
+				},
+				Id: 1,
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						UpdatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						UpdatedAt: mockTime,
+					},
+				}, 1).Return(nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockfunc(tt.args, mocks)
+
+			err := service.Update(context, tt.args.Input, tt.args.Id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("{{ .EntityNameCamelCase }}.Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func Test_{{ .EntityNameCamelCase }}Service_Delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+
+	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
+	type mockfields struct {
+		{{ .EntityNameCamelCase }} *mock_{{ .EntityNameSnakeCase }}.MockInterface
+	}
+	mocks := mockfields{
+		{{ .EntityNameCamelCase }}: {{ .EntityNameCamelCase }}Repo,
+	}
+	params := {{ .EntityNameLowerCase }}.Param{
+		{{ .EntityName }}Repository: {{ .EntityNameCamelCase }}Repo,
+	}
+	service := {{ .EntityNameLowerCase }}.Init(params)
+	type args struct {
+		Id int
+	}
+
+	mockTime := time.Date(2022, 5, 11, 0, 0, 0, 0, time.Local)
+	{{ .EntityNameLowerCase }}.Now = func() time.Time {
+		return mockTime
+	}
+
+	restoreAll := func() {
+		{{ .EntityNameLowerCase }}.Now = time.Now
+	}
+	defer restoreAll()
+
+	tests := []struct {
+		name     string
+		args     args
+		mockfunc func(a args, mock mockfields)
+		wantErr  bool
+	}{
+		{
+			name: "delete {{ .EntityNameCamelCase }} error",
+			args: args{
+				Id: 1,
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						DeletedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						DeletedAt: mockTime,
+						Status:    -1,
+					},
+				}, 1).Return(assert.AnError)
+			},
+			wantErr: true,
+		},
+		{
+			name: "delete {{ .EntityNameCamelCase }} success",
+			args: args{
+				Id: 1,
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
+					Model: models.{{ .EntityName }}Input{
+						DeletedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						DeletedAt: mockTime,
+						Status:    -1,
+					},
+				}, 1).Return(nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockfunc(tt.args, mocks)
+
+			err := service.Delete(context, tt.args.Id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("{{ .EntityNameCamelCase }}.Delete() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func Test_{{ .EntityNameCamelCase }}Service_Get(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	context := context.Background()
+
+	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
+	type mockfields struct {
+		{{ .EntityNameCamelCase }} *mock_{{ .EntityNameSnakeCase }}.MockInterface
+	}
+	mocks := mockfields{
+		{{ .EntityNameCamelCase }}: {{ .EntityNameCamelCase }}Repo,
+	}
+	params := {{ .EntityNameLowerCase }}.Param{
+		{{ .EntityName }}Repository: {{ .EntityNameCamelCase }}Repo,
+	}
+	service := {{ .EntityNameLowerCase }}.Init(params)
+	type args struct {
+		Paging filter.Paging[filter.{{ .EntityName }}Filter]
+	}
+
+	restoreAll := func() {
+		{{ .EntityNameLowerCase }}.Now = time.Now
+	}
+	defer restoreAll()
+
+	tests := []struct {
+		name      string
+		args      args
+		mockfunc  func(a args, mock mockfields)
+		want      []models.{{ .EntityName }}
+		wantCount int
+		wantErr   bool
+	}{
+		{
+			name: "get {{ .EntityNameCamelCase }} error",
+			args: args{
+				filter.Paging[filter.{{ .EntityName }}Filter]{},
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Get(context, filter.Paging[filter.{{ .EntityName }}Filter]{IsActive: true}).Return([]models.{{ .EntityName }}{}, 0, assert.AnError)
+			},
+			want:      []models.{{ .EntityName }}{},
+			wantCount: 0,
+			wantErr:   true,
+		},
+		{
+			name: "get {{ .EntityNameCamelCase }} success",
+			args: args{
+				filter.Paging[filter.{{ .EntityName }}Filter]{},
+			},
+			mockfunc: func(a args, mock mockfields) {
+				mock.{{ .EntityNameCamelCase }}.EXPECT().Get(context, filter.Paging[filter.{{ .EntityName }}Filter]{IsActive: true}).Return([]models.{{ .EntityName }}{
+                    {},
+					{},
+				}, 2, nil)
+			},
+			want: []models.{{ .EntityName }}{
+				{},
+				{},
+			},
+			wantCount: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockfunc(tt.args, mocks)
+
+			{{ .EntityNameCamelCase }}s, count, err := service.Get(context, tt.args.Paging)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("{{ .EntityNameCamelCase }}.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.Equal(t, tt.want, {{ .EntityNameCamelCase }}s)
+			assert.Equal(t, tt.wantCount, count)
+		})
+	}
+}

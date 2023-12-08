@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/yudhaananda/go-code-generator/helper"
 )
 
 type Interface interface {
@@ -73,10 +76,15 @@ func (s *zipping) addFiles(w *zip.Writer, basePath string) {
 			if err != nil {
 				fmt.Println(err)
 			}
+			fileName := file.Name()
+			if strings.Contains(file.Name(), ".txt") {
+				split := strings.Split(file.Name(), ".")
+				fileName = strings.Join(helper.Remove(split, len(split)-1), ".")
+			}
 
 			// Add some files to the archive.
 			var f io.Writer
-			f, err = w.Create(basePath + file.Name())
+			f, err = w.Create(basePath + fileName)
 
 			if err != nil {
 				fmt.Println(err)
