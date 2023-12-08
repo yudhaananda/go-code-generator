@@ -5,3 +5,7 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	@docker run -p 8080:8080 codegen
+
+.PHONY: run
+run:
+	@go run main.go
