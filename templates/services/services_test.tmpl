@@ -16,7 +16,7 @@ import (
 func Test_{{ .EntityNameCamelCase }}Service_Create(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+	context := context.WithValue(context.Background(), models.UserKey, models.User{Id: 1})
 
 	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
 	type mockfields struct {
@@ -57,7 +57,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Create(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Create(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						CreatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						CreatedBy: context.Value(models.UserKey).(models.User).Id,
 						CreatedAt: mockTime,
 					},
 				}).Return(assert.AnError)
@@ -74,7 +74,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Create(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Create(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						CreatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						CreatedBy: context.Value(models.UserKey).(models.User).Id,
 						CreatedAt: mockTime,
 					},
 				}).Return(nil)
@@ -97,7 +97,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Create(t *testing.T) {
 func Test_{{ .EntityNameCamelCase }}Service_Update(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+	context := context.WithValue(context.Background(), models.UserKey, models.User{Id: 1})
 
 	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
 	type mockfields struct {
@@ -140,7 +140,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Update(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						UpdatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						UpdatedBy: context.Value(models.UserKey).(models.User).Id,
 						UpdatedAt: mockTime,
 					},
 				}, 1).Return(assert.AnError)
@@ -158,7 +158,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Update(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						UpdatedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						UpdatedBy: context.Value(models.UserKey).(models.User).Id,
 						UpdatedAt: mockTime,
 					},
 				}, 1).Return(nil)
@@ -181,7 +181,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Update(t *testing.T) {
 func Test_{{ .EntityNameCamelCase }}Service_Delete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	context := context.WithValue(context.Background(), models.UserKey, models.{{ .EntityName }}{Id: 1})
+	context := context.WithValue(context.Background(), models.UserKey, models.User{Id: 1})
 
 	{{ .EntityNameCamelCase }}Repo := mock_{{ .EntityNameSnakeCase }}.NewMockInterface(ctrl)
 	type mockfields struct {
@@ -222,7 +222,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Delete(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						DeletedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						DeletedBy: context.Value(models.UserKey).(models.User).Id,
 						DeletedAt: mockTime,
 						Status:    -1,
 					},
@@ -238,7 +238,7 @@ func Test_{{ .EntityNameCamelCase }}Service_Delete(t *testing.T) {
 			mockfunc: func(a args, mock mockfields) {
 				mock.{{ .EntityNameCamelCase }}.EXPECT().Update(context, models.Query[models.{{ .EntityName }}Input]{
 					Model: models.{{ .EntityName }}Input{
-						DeletedBy: context.Value(models.UserKey).(models.{{ .EntityName }}).Id,
+						DeletedBy: context.Value(models.UserKey).(models.User).Id,
 						DeletedAt: mockTime,
 						Status:    -1,
 					},

@@ -82,7 +82,7 @@ func (e *EntityValueInput) GetEntityValue() EntityValue {
 }
 
 func (e *EntityValueInput) GetMockTableMember() (result string) {
-	return fmt.Sprintf("\"%s\", ", helper.ConvertToCamelCase(e.EntityName))
+	return fmt.Sprintf("\"%s\", ", helper.ConvertToSnakeCase(e.EntityName))
 }
 
 func (e *EntityValueInput) GetMockRow() (result string) {
