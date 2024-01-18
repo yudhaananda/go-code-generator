@@ -69,17 +69,22 @@ func (e *EntityValueInput) GetTableValue() (result string) {
 	return
 }
 
-func (e *EntityValueInput) GetEntityValue() EntityValue {
+func (e *EntityValueInput) GetEntityValue() (EntityValue, EntityValue) {
 	dataType := e.EntityDataType
 	if e.IsNullable {
 		dataType = fmt.Sprintf("formatter.NullableDataType[%s]", e.EntityDataType)
 	}
 	return EntityValue{
-		EntityValueName:          e.EntityName,
-		EntityDataType:           dataType,
-		EntityValueNameSnakeCase: helper.ConvertToSnakeCase(e.EntityName),
-		EntityValueNameCamelCase: helper.ConvertToCamelCase(e.EntityName),
-	}
+			EntityValueName:          e.EntityName,
+			EntityDataType:           dataType,
+			EntityValueNameSnakeCase: helper.ConvertToSnakeCase(e.EntityName),
+			EntityValueNameCamelCase: helper.ConvertToCamelCase(e.EntityName),
+		}, EntityValue{
+			EntityValueName:          e.EntityName,
+			EntityDataType:           e.EntityDataType,
+			EntityValueNameSnakeCase: helper.ConvertToSnakeCase(e.EntityName),
+			EntityValueNameCamelCase: helper.ConvertToCamelCase(e.EntityName),
+		}
 }
 
 func (e *EntityValueInput) GetMockTableMember() (result string) {
@@ -138,9 +143,10 @@ type EntityValue struct {
 }
 
 type CreateModelsInput struct {
-	ProjectName string
-	EntityName  string
-	EntityValue []EntityValue
+	ProjectName      string
+	EntityName       string
+	EntityValue      []EntityValue
+	EntityValueInput []EntityValue
 }
 
 type GeneralTemplateInput struct {

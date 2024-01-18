@@ -44,11 +44,12 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 	)
 	for entity, members := range input.Entity {
 		var (
-			entityValue     = []models.EntityValue{}
-			mockTableMember string
-			mockRow         string
-			wantMock        string
-			tableMember     = models.TableMember{
+			entityValues      = []models.EntityValue{}
+			entityValuesInput = []models.EntityValue{}
+			mockTableMember   string
+			mockRow           string
+			wantMock          string
+			tableMember       = models.TableMember{
 				TableName: helper.ConvertToSnakeCase(helper.ConvertToPlural(entity)),
 			}
 		)
@@ -76,7 +77,9 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 
 		for _, member := range members {
 			item := member.GetTableValue()
-			entityValue = append(entityValue, member.GetEntityValue())
+			entityValue, entityValueInput := member.GetEntityValue()
+			entityValues = append(entityValues, entityValue)
+			entityValuesInput = append(entityValuesInput, entityValueInput)
 			tableMember.TableItems = append(tableMember.TableItems, models.TableItem{Item: item})
 			mockTableMember += member.GetMockTableMember()
 			mockRow += member.GetMockRow()
@@ -93,9 +96,10 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 			"templates/models/models.tmpl",
 			"models.tmpl",
 			models.CreateModelsInput{
-				ProjectName: input.ProjectName,
-				EntityName:  entity,
-				EntityValue: entityValue,
+				ProjectName:      input.ProjectName,
+				EntityName:       entity,
+				EntityValue:      entityValues,
+				EntityValueInput: entityValuesInput,
 			},
 		); err != nil {
 			return nil, err
@@ -110,7 +114,7 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 			"filter.tmpl",
 			models.FilterInput{
 				EntityName:  entity,
-				EntityValue: entityValue,
+				EntityValue: entityValuesInput,
 			},
 		); err != nil {
 			return nil, err
