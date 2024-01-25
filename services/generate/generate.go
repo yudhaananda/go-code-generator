@@ -560,6 +560,10 @@ func (s *generate) Generate(input models.Model) ([]byte, error) {
 		return nil, err
 	}
 
+	if err := copy.Copy("templates/view", input.ProjectName+"/src/"); err != nil {
+		return nil, err
+	}
+
 	// Zipping
 	result, err := s.zipping.Zipping(input.ProjectName)
 	if err != nil {
